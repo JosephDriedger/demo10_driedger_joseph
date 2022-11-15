@@ -1,4 +1,4 @@
-var currentUser
+var currentUser;
 
 function populateInfo() {
     firebase.auth().onAuthStateChanged(user => {

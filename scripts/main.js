@@ -1,3 +1,20 @@
+var currentUser;
+firebase.auth().onAuthStateChanged(user => {
+    if (user) {
+        currentUser = db.collection("users").doc(user.uid);   //global
+        console.log(currentUser);
+
+        // the following functions are always called when someone is logged in
+        read_display_Quote();
+        insertName();
+        populateCardsDynamically();
+    } else {
+        // No user is signed in.
+        console.log("No user is signed in");
+        window.location.href = "login.html";
+    }
+});
+
 function read_display_Quote(){
     const date = new Date();
     const today = date.getDay();
@@ -144,24 +161,32 @@ function writeHikes() {
 }
 
 function populateCardsDynamically() {
-    let hikeCardTemplate = document.getElementById("hikeCardTemplate");
-    let hikeCardGroup = document.getElementById("hikeCardGroup");
-
-    db.collection("hikes").get()
+    let hikeCardTemplate = document.getElementById("hikeCardTemplate");  //card template
+    let hikeCardGroup = document.getElementById("hikeCardGroup");   //where to append card
+    
+    //doublecheck: is your Firestore collection called "hikes" or "Hikes"?
+    db.collection("hikes").get()   
         .then(allHikes => {
             allHikes.forEach(doc => {
                 var hikeName = doc.data().name; //gets the name field
                 var hikeID = doc.data().code; //gets the unique ID field
                 var hikeLength = doc.data().length; //gets the length field
                 let testHikeCard = hikeCardTemplate.content.cloneNode(true);
-                testHikeCard.querySelector('.card-title').innerHTML = hikeName;     //equiv getElementByClassName
-                testHikeCard.querySelector('.card-length').innerHTML = hikeLength;  //equiv getElementByClassName
-                testHikeCard.querySelector('a').onclick = () => setHikeData(hikeID);//equiv getElementByTagName
-                testHikeCard.querySelector('img').src = `./images/${hikeID}.jpg`;   //equiv getElementByTagName
+                testHikeCard.querySelector('.card-title').innerHTML = hikeName;
+                testHikeCard.querySelector('.card-length').innerHTML = hikeLength;
+                testHikeCard.querySelector('a').onclick = () => setHikeData(hikeID);
+
+                //next 2 lines are new for demo#11
+                //this line sets the id attribute for the <i> tag in the format of "save-hikdID" 
+                //so later we know which hike to bookmark based on which hike was clicked
+                testHikeCard.querySelector('i').id = 'save-' + hikeID;
+                // this line will call a function to save the hikes to the user's document             
+                testHikeCard.querySelector('i').onclick = () => saveBookmark(hikeID);
+
+                testHikeCard.querySelector('img').src = `./images/${hikeID}.jpg`;
                 hikeCardGroup.appendChild(testHikeCard);
-                setHikeData(hikeID);
             })
-    })
+        })
 }
 populateCardsDynamically();
 
